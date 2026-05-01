@@ -1,6 +1,21 @@
 # Quote Next-Word Prediction
 
-End-to-end **next-word prediction** on famous quotes: train an **LSTM** language model from a CSV corpus in Jupyter, export **`tokenizer.pkl`**, **`max_len.pkl`**, and **`*.h5`**, then serve predictions through a **Streamlit** web UI.
+## About this application
+
+This project is a **hands-on demo of next-word prediction**: a small neural language model learns patterns from a **quotes dataset** (who said what is stored for context, but training uses the **quote text only**). Once trained—or using the **bundled model files**—you get a simple **web app** that behaves like a typing assistant for that style of language.
+
+**What the app does for you**
+
+- You open the Streamlit UI and **type a partial phrase** (e.g. the beginning of a sentence).
+- The model looks at your words as **tokens**, runs them through an **LSTM**, and outputs a **probability distribution over the vocabulary**.
+- The app shows the **top next-word suggestions** (ranked, with scores)—the words the model thinks are most likely to come **immediately next**.
+
+**What it is not**
+
+- It predicts **one word ahead at a time**, not a full story in one shot (you could extend the notebook or app to loop predictions, but the shipped UI is focused on **single-step** suggestions).
+- Results are **best when your input looks like the training data** (short quote-like English). Rare or out-of-vocabulary words cannot be encoded and may yield no prediction.
+
+**How the pieces fit together**: optional training and export live in **`codefile.ipynb`**; the interactive experience is **`app.py`** (TensorFlow when available, otherwise **NumPy + h5py** so hosts such as Streamlit Cloud on newer Python still work). See **Overview** below for a compact map of files.
 
 ---
 
