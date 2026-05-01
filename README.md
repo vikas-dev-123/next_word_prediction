@@ -25,9 +25,64 @@ The model learns short-range patterns in quote-style English (lowercased, punctu
 | `quote` | Full quotation text |
 | `Author` | Attribution (used for analysis in the notebook; **not** fed into the tokenizer for next-word training in the provided pipeline) |
 
-The corpus mixes lengths from one-liners to long passages and spans many authors (on the order of **~3k** rows and **~1k** unique authors in the version exported with this project).
+### Raw corpus statistics
+
+Figures below refer to the CSV shipped with this repository (computed directly from `qoute_dataset.csv`).
+
+| Statistic | Value |
+|-----------|------:|
+| Rows (quotes) | **3,038** |
+| Columns | `quote`, `Author` |
+| Unique authors | **1,005** |
+| Missing `quote` values | **0** |
+| Mean `quote` length (characters) | **~155** |
+
+The corpus mixes short one-liners and long passages across many authors.
+
+### Derived ML dataset (after preprocessing)
+
+These figures match the pipeline in **`codefile.ipynb`**: lowercase quotes, strip punctuation, Keras `Tokenizer(num_words=10_000)`, sliding-window `(prefix → next token)` pairs, **`pre`** padding to **`max_len`**.
+
+| Quantity | Value |
+|----------|------:|
+| Maximum prefix length **`max_len`** | **745** |
+| Supervised examples **`(X, y)`** | **85,271** |
+| Padded input shape **`X_padded`** | **(85,271 × 745)** |
+| Distinct tokens in **`word_index`** (notebook) | **~8,978** |
+| Model output classes **`vocab_size`** | **10,000** |
 
 ---
+
+## Metrics
+
+### Objective during training
+
+Configured in Keras for the LSTM (and SimpleRNN baseline in the notebook):
+
+| Item | Setting |
+|------|---------|
+| **Loss** | Categorical crossentropy |
+| **Optimization** | Adam |
+| **Tracked metric** | Accuracy (`metrics=['accuracy']`) |
+
+Per-epoch history was **not** checked into the notebook snapshot in this repo; after training, inspect `model.fit()` output or log **`History`** to CSV/TensorBoard for curves.
+
+### Reference scores on bundled checkpoint
+
+The following numbers were obtained by **rebuilding supervised pairs from the full corpus** with the **saved** `tokenizer.pkl`, `max_len.pkl`, and **`*.h5`**, then running **`model.evaluate`** on a **random subset of 5,000** pairs (**NumPy seed 42**, batch size 256). This measures consistency of the artifacts under the training recipe; it is **not** a held-out test split (the notebook does not define a separate validation/test partition).
+
+| Metric | Value |
+|--------|------:|
+| **Loss** (subset) | **~2.26** |
+| **Accuracy** (subset) | **~68.9%** |
+| **Evaluate sample size** | **5,000** |
+
+For a strict generalization estimate, split quotes or sequences **before** building sliding-window pairs, then report **`val_loss` / `val_accuracy`** from `model.fit(validation_data=...)`.
+
+*`fit()` hyperparameters (epochs, batch size, callbacks) are defined in **`codefile.ipynb`**.*
+
+---
+
 
 ## Methodology (training notebook)
 
@@ -59,9 +114,7 @@ Configured in the notebook:
 | **LSTM** | `units = 128` |
 | **Dense** | `units = 10_000`, `activation = softmax` |
 
-**Optimization:** Adam · **Loss:** categorical crossentropy · **Metric:** accuracy  
-
-*(Complete training cells—including `fit()` hyperparameters such as epochs and batch size—live in `codefile.ipynb`; extend there before exporting a new `.h5` if you change the recipe.)*
+**Optimization:** Adam · **Loss:** categorical crossentropy · **Metric:** accuracy (see **Metrics** section for reference evaluation numbers).
 
 ---
 
