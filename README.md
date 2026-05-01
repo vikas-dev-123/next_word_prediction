@@ -83,7 +83,6 @@ For a strict generalization estimate, split quotes or sequences **before** build
 
 ---
 
-
 ## Methodology (training notebook)
 
 The workflow in **`codefile.ipynb`** follows standard character/word-level language-modeling steps adapted for **word tokens**:
@@ -102,11 +101,90 @@ Artifacts written by the notebook (aligned with the UI):
 - `max_len.pkl` — integer padding length  
 - `lstm_model.h5` — trained model (local filenames such as `lstm_model (1).h5` also work if you keep a single `*.h5` in the app folder)
 
+### Diagrams
+
+The figures below use **[Mermaid](https://mermaid.js.org/)** syntax; they render automatically on **GitHub** and in many Markdown previews.
+
+#### Figure 1 — End-to-end pipeline (data → training → app)
+
+```mermaid
+flowchart TD
+    subgraph Source["1. Data"]
+        CSV[("qoute_dataset.csv<br/>quote + Author")]
+    end
+
+    subgraph Prep["2. Preprocessing"]
+        Q["Quote column"]
+        N["Normalize<br/>lowercase + strip punctuation"]
+        T["Keras Tokenizer<br/>num_words = 10_000"]
+        S["Integer sequences"]
+        Q --> N --> T --> S
+    end
+
+    subgraph Supervised["3. Supervised dataset"]
+        W["Sliding window<br/>prefix → next token"]
+        P["pad_sequences<br/>max_len = 745, padding pre"]
+        Y["One-hot targets<br/>to_categorical vocab_size"]
+        W --> P --> Y
+    end
+
+    subgraph Train["4. Training"]
+        M["LSTM model<br/>Adam + categorical CE"]
+    end
+
+    subgraph Save["5. Artifacts"]
+        H5["*.h5 checkpoint"]
+        PK1["tokenizer.pkl"]
+        PK2["max_len.pkl"]
+    end
+
+    subgraph App["6. Inference"]
+        UI["Streamlit app.py"]
+        InText["User phrase"]
+        TopK["Top-k next-word scores"]
+        InText --> UI --> TopK
+    end
+
+    CSV --> Q
+    S --> W
+    P --> M
+    Y --> M
+    M --> H5
+    M --> PK1
+    M --> PK2
+    H5 --> UI
+    PK1 --> UI
+    PK2 --> UI
+```
+
+#### Figure 2 — LSTM architecture (tensor shapes)
+
+```mermaid
+flowchart LR
+    subgraph Input
+        X["Token IDs<br/>batch × max_len<br/>max_len = 745"]
+    end
+
+    subgraph Layers["Keras Sequential"]
+        E["Embedding<br/>input_dim 10_000<br/>output_dim 50"]
+        L["LSTM<br/>units 128"]
+        D["Dense<br/>units 10_000<br/>softmax"]
+        E --> L --> D
+    end
+
+    subgraph Output
+        Z["Probability vector<br/>batch × 10_000<br/>P next token"]
+    end
+
+    X --> E
+    D --> Z
+```
+
 ---
 
 ## Model architecture (LSTM)
 
-Configured in the notebook:
+Configured in the notebook (see **Figure 2** above for a compact block diagram):
 
 | Layer | Configuration |
 |-------|----------------|
