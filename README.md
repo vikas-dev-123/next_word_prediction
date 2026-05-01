@@ -249,17 +249,38 @@ The **`runtime.txt`** file documents intent (`python-3.11`) for other hosts; **S
 
 **Rebooting only** an app that was created with Python 3.14 **does not change** the interpreter; you still need **delete + redeploy** with Advanced settings if your app is stuck on 3.14.
 
+Official reference: [Upgrade your app’s Python version on Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app/upgrade-python).
+
+---
+
+## Deploy with Docker (Python 3.11 — works when Streamlit Cloud uses 3.14)
+
+If Community Cloud keeps **`Using Python 3.14.x`** in the logs, **no TensorFlow build will succeed** until the platform runs **3.11 or 3.12**. When changing Python in the dashboard is difficult or unavailable, deploy this repo as a **Docker** image: the **`Dockerfile`** pins **`python:3.11-slim`** so TensorFlow installs reliably.
+
+From the project root:
+
+```bash
+docker build -t nextword-predict .
+docker run -p 8501:8501 nextword-predict
+```
+
+Open **http://localhost:8501**.
+
+Typical hosts that accept a Dockerfile: **Railway**, **Render**, **Fly.io**, **Google Cloud Run**, **Azure Container Apps**. Point them at this repo and enable Docker build (same `Dockerfile`). Your free-tier Streamlit Cloud URL is optional once this runs elsewhere.
+
 ---
 
 ## Repository layout
 
 ```
 next_word_prediction/
-├── app.py                 # Streamlit inference UI
-├── requirements.txt       # Runtime dependencies for the app
-├── runtime.txt                       # Hint for some hosts (Cloud uses dashboard Python)
-├── STREAMLIT_CLOUD_PYTHON_FIX.txt   # Read this if Streamlit Cloud keeps failing TensorFlow install
-├── codefile.ipynb         # Data prep + model training + pickle export
+├── app.py                          # Streamlit inference UI
+├── Dockerfile                      # Python 3.11 image (Docker / Railway / Render / …)
+├── .dockerignore
+├── requirements.txt                # Pip deps (TensorFlow needs Python ≤3.12 today)
+├── runtime.txt                     # Hint for some hosts (Cloud uses dashboard Python)
+├── STREAMLIT_CLOUD_PYTHON_FIX.txt  # Streamlit Cloud Python 3.14 + TensorFlow checklist
+├── codefile.ipynb                  # Data prep + model training + pickle export
 ├── qoute_dataset.csv      # Quotes corpus (CSV)
 ├── tokenizer.pkl          # Produced by notebook (required for app)
 ├── max_len.pkl            # Produced by notebook (required for app)

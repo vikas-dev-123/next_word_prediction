@@ -43,3 +43,26 @@ FILES LIKE runtime.txt DO NOT SET PYTHON ON STREAMLIT COMMUNITY CLOUD
 Only the Python version you pick in the deployment dialog (step 5) matters.
 
 ================================================================================
+HOW TO VERIFY YOU FIXED IT
+================================================================================
+
+After deploy, open "Manage app" logs again.
+
+GOOD:  "Using Python 3.11.x" or "3.12.x"
+BAD:   "Using Python 3.14.x"  -> TensorFlow will NEVER install; repeat delete + redeploy.
+
+================================================================================
+IF YOU CANNOT GET PYTHON 3.11 / 3.12 ON STREAMLIT CLOUD
+================================================================================
+
+Some workspaces default to the newest Python and the UI can be confusing.
+
+Use Docker instead — Python 3.11 is FIXED in the Dockerfile (see README section
+"Deploy with Docker"). Works on Railway, Render, Fly.io, Google Cloud Run, etc.:
+
+  docker build -t nextword .
+  docker run -p 8501:8501 nextword
+
+Then open http://localhost:8501
+
+================================================================================
