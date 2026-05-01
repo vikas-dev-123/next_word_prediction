@@ -1,12 +1,14 @@
 # Quote Next-Word Prediction
 
+**Live demo (Streamlit Cloud):** [https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/](https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/)
+
 ## About this application
 
 This project is a **hands-on demo of next-word prediction**: a small neural language model learns patterns from a **quotes dataset** (who said what is stored for context, but training uses the **quote text only**). Once trained—or using the **bundled model files**—you get a simple **web app** that behaves like a typing assistant for that style of language.
 
 **What the app does for you**
 
-- You open the Streamlit UI and **type a partial phrase** (e.g. the beginning of a sentence).
+- You open the Streamlit UI ([live app](https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/) or run locally) and **type a partial phrase** (e.g. the beginning of a sentence).
 - The model looks at your words as **tokens**, runs them through an **LSTM**, and outputs a **probability distribution over the vocabulary**.
 - The app shows the **top next-word suggestions** (ranked, with scores)—the words the model thinks are most likely to come **immediately next**.
 
@@ -23,6 +25,7 @@ This project is a **hands-on demo of next-word prediction**: a small neural lang
 
 | Component | Description |
 |-----------|-------------|
+| **Live demo** | [Next-word prediction on Streamlit Cloud](https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/) |
 | **Data** | `qoute_dataset.csv` — quote text and attributed authors |
 | **Training** | `codefile.ipynb` — preprocessing, sequence dataset, Keras LSTM, persistence helpers |
 | **Application** | `app.py` — loads artifacts and ranks the next token via softmax |
@@ -246,6 +249,8 @@ python export_tokenizer_json.py
 ---
 
 ## Deploying on Streamlit Community Cloud (`*.streamlit.app`)
+
+**This project’s hosted instance:** [https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/](https://nextwordprediction-lz4zact2ldvdnwn5nsdips.streamlit.app/)
 
 This repo’s **`requirements.txt`** installs only **Streamlit, NumPy, and h5py** — no TensorFlow — so dependency resolution succeeds even when Community Cloud uses **Python 3.14**.
 
