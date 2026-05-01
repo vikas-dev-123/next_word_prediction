@@ -1,68 +1,30 @@
 ================================================================================
-STREAMLIT CLOUD: WHY TensorFlow INSTALL FAILS (Python 3.14)
+UPDATE (TensorFlow-free Streamlit Cloud)
 ================================================================================
 
-Your build logs show:
+This project now runs on Streamlit Community Cloud WITHOUT TensorFlow:
+
+  requirements.txt  →  streamlit + numpy + h5py only
+
+Inference uses numpy_inference.py + tokenizer_word_index.json + *.h5 + max_len.pkl.
+
+After changing tokenizer.pkl locally, run:
+
+  python export_tokenizer_json.py
+
+and commit tokenizer_word_index.json.
+
+================================================================================
+LEGACY: TensorFlow on Streamlit Cloud with Python 3.14 (still impossible)
+================================================================================
+
+Older builds showed:
+
   "Using Python 3.14.4 environment"
 
-TensorFlow does NOT publish wheels for Python 3.14 yet.
-So pip/uv will ALWAYS fail — no matter what we put in requirements.txt.
+TensorFlow / tensorflow-cpu had NO wheels for Python 3.14 — installs failed.
 
-================================================================================
-FIX (YOU MUST DO THIS IN THE STREAMLIT WEBSITE — NOT IN CODE)
-================================================================================
-
-Official Streamlit docs: you usually CANNOT change Python on an existing app.
-You must DELETE the app and DEPLOY AGAIN with the correct Python.
-
-Steps:
-
-1) Open https://share.streamlit.io and sign in.
-
-2) DELETE your current deployment for this repo
-   (Look for Delete / Remove app — wording varies.)
-
-3) Click "Create app" / deploy from GitHub again:
-   - Repo: your next_word_prediction repo
-   - Branch: main
-   - Main file: app.py
-
-4) BEFORE pressing final Deploy, open "Advanced settings" (or equivalent).
-
-5) Python version: choose 3.11 (best for TensorFlow) or 3.12.
-   DO NOT leave it on 3.14.
-
-6) Deploy.
-
-7) Push the latest code from this repo (requirements.txt + tensorflow-cpu).
-
-================================================================================
-FILES LIKE runtime.txt DO NOT SET PYTHON ON STREAMLIT COMMUNITY CLOUD
-================================================================================
-
-Only the Python version you pick in the deployment dialog (step 5) matters.
-
-================================================================================
-HOW TO VERIFY YOU FIXED IT
-================================================================================
-
-After deploy, open "Manage app" logs again.
-
-GOOD:  "Using Python 3.11.x" or "3.12.x"
-BAD:   "Using Python 3.14.x"  -> TensorFlow will NEVER install; repeat delete + redeploy.
-
-================================================================================
-IF YOU CANNOT GET PYTHON 3.11 / 3.12 ON STREAMLIT CLOUD
-================================================================================
-
-Some workspaces default to the newest Python and the UI can be confusing.
-
-Use Docker instead — Python 3.11 is FIXED in the Dockerfile (see README section
-"Deploy with Docker"). Works on Railway, Render, Fly.io, Google Cloud Run, etc.:
-
-  docker build -t nextword .
-  docker run -p 8501:8501 nextword
-
-Then open http://localhost:8501
+If you insist on TensorFlow IN THE CLOUD, deploy only on Python 3.11 / 3.12
+(delete app → redeploy → Advanced settings) OR use Docker.
 
 ================================================================================

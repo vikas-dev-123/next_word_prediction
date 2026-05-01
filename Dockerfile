@@ -1,10 +1,6 @@
-# Locked to Python 3.11 — TensorFlow has no wheels for Python 3.14+ as of 2026.
-# Works on Railway, Render, Fly.io, Google Cloud Run, etc.
+# Python 3.11 image for Docker-focused hosts (optional). Streamlit Cloud works with
+# requirements.txt alone on Python 3.14 via NumPy inference — Docker is not required.
 FROM python:3.11-slim-bookworm
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

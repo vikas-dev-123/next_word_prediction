@@ -1,8 +1,5 @@
-# ------------------------------------------------------------------------------
-# STREAMLIT CLOUD: build logs MUST show Python 3.11 or 3.12 — NOT 3.14.
-# TensorFlow has no wheels for 3.14. Fix: delete app -> redeploy -> Advanced
-# settings -> Python 3.11. See STREAMLIT_CLOUD_PYTHON_FIX.txt in this repo.
-# ------------------------------------------------------------------------------
+# TensorFlow is optional: `app.py` uses NumPy + h5py when TensorFlow is absent
+# (needed for Streamlit Community Cloud on Python 3.14, where TF wheels do not exist).
 streamlit>=1.28.0
-tensorflow-cpu>=2.16.1,<2.18
 numpy>=1.26.0
+h5py>=3.11.0

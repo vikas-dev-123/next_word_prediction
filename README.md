@@ -213,49 +213,38 @@ cd path\to\next_word_prediction
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+# optional: TensorFlow backend (needs Python ≤3.12 wheels from TensorFlow)
+pip install -r requirements-local.txt
 streamlit run app.py
 ```
 
 Open **http://localhost:8501** in your browser.
 
-**Requirements:** see **`requirements.txt`** (TensorFlow/Keras, Streamlit, NumPy). Use a **virtual environment** on Windows to avoid conflicts with a broken global TensorFlow install.
+**Requirements:** **`requirements.txt`** is enough to run the app (NumPy + h5py + Streamlit). For the TensorFlow code path, also install **`requirements-local.txt`** (TensorFlow currently skips Python 3.14).
+
+Whenever you change **`tokenizer.pkl`**, regenerate **`tokenizer_word_index.json`** for TensorFlow-free deploys:
+
+```bash
+python export_tokenizer_json.py
+```
 
 ---
 
 ## Deploying on Streamlit Community Cloud (`*.streamlit.app`)
 
-### If logs say `Python 3.14.x` and TensorFlow / tensorflow-cpu fails to install
+This repo’s **`requirements.txt`** installs only **Streamlit, NumPy, and h5py** — no TensorFlow — so dependency resolution succeeds even when Community Cloud uses **Python 3.14**.
 
-TensorFlow **does not ship wheels for Python 3.14**. Updating **`requirements.txt` alone will never fix that** while the host keeps Python 3.14.
+Inference uses **`numpy_inference.py`** plus **`tokenizer_word_index.json`** (run **`python export_tokenizer_json.py`** after changing `tokenizer.pkl`) and the same **`*.h5`** / **`max_len.pkl`** as before.
 
-Per Streamlit’s docs, **Python version is chosen when you deploy**. On many accounts you **cannot switch Python on an existing app**—you must **delete** the deployment and **deploy again**.
+If TensorFlow **is** available locally or on another host, `app.py` will prefer it automatically.
 
-Do this:
-
-1. Go to [share.streamlit.io](https://share.streamlit.io) → open your workspace.
-2. **Delete** the broken app (remove deployment).
-3. **Deploy from GitHub again** (same repo, branch, entrypoint `app.py`).
-4. Before the final **Deploy**, open **Advanced settings**.
-5. Set **Python version** to **3.11** (recommended) or **3.12**. **Do not use 3.14** with TensorFlow today.
-6. Deploy, then wait for dependencies to install.
-
-A short checklist with the same steps lives in **`STREAMLIT_CLOUD_PYTHON_FIX.txt`** in the repo root so it’s easy to spot on GitHub.
-
-The **`runtime.txt`** file documents intent (`python-3.11`) for other hosts; **Streamlit Community Cloud does not use `runtime.txt` for Python**—the dashboard choice in step 5 is what matters.
-
-### Dependencies on Cloud
-
-`requirements.txt` uses **`tensorflow-cpu`** (appropriate for Linux CPU on Community Cloud), pinned to versions that install on **Python 3.11 / 3.12**. After you redeploy with one of those Python versions, installs should succeed.
-
-**Rebooting only** an app that was created with Python 3.14 **does not change** the interpreter; you still need **delete + redeploy** with Advanced settings if your app is stuck on 3.14.
-
-Official reference: [Upgrade your app’s Python version on Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app/upgrade-python).
+Optional: you can still deploy with **Python 3.11 / 3.12** and use **`requirements-local.txt`** if you want the TensorFlow backend in the cloud.
 
 ---
 
-## Deploy with Docker (Python 3.11 — works when Streamlit Cloud uses 3.14)
+## Deploy with Docker (optional)
 
-If Community Cloud keeps **`Using Python 3.14.x`** in the logs, **no TensorFlow build will succeed** until the platform runs **3.11 or 3.12**. When changing Python in the dashboard is difficult or unavailable, deploy this repo as a **Docker** image: the **`Dockerfile`** pins **`python:3.11-slim`** so TensorFlow installs reliably.
+The **`Dockerfile`** uses **Python 3.11** and installs **`requirements.txt`** only (lightweight: Streamlit + NumPy + h5py). Add a `pip install -r requirements-local.txt` layer yourself if you want TensorFlow inside the container.
 
 From the project root:
 
@@ -266,7 +255,7 @@ docker run -p 8501:8501 nextword-predict
 
 Open **http://localhost:8501**.
 
-Typical hosts that accept a Dockerfile: **Railway**, **Render**, **Fly.io**, **Google Cloud Run**, **Azure Container Apps**. Point them at this repo and enable Docker build (same `Dockerfile`). Your free-tier Streamlit Cloud URL is optional once this runs elsewhere.
+Typical hosts: **Railway**, **Render**, **Fly.io**, **Google Cloud Run**, **Azure Container Apps**.
 
 ---
 
@@ -274,17 +263,21 @@ Typical hosts that accept a Dockerfile: **Railway**, **Render**, **Fly.io**, **G
 
 ```
 next_word_prediction/
-├── app.py                          # Streamlit inference UI
-├── Dockerfile                      # Python 3.11 image (Docker / Railway / Render / …)
+├── app.py                          # Streamlit UI (TensorFlow if installed, else NumPy)
+├── numpy_inference.py              # TF-free inference (h5py reads Keras H5 weights)
+├── export_tokenizer_json.py       # Refresh tokenizer_word_index.json after retraining
+├── tokenizer_word_index.json      # Needed when TensorFlow is not installed (Streamlit Cloud 3.14)
+├── Dockerfile                      # Optional: locked Python 3.11 for Docker hosts
 ├── .dockerignore
-├── requirements.txt                # Pip deps (TensorFlow needs Python ≤3.12 today)
-├── runtime.txt                     # Hint for some hosts (Cloud uses dashboard Python)
-├── STREAMLIT_CLOUD_PYTHON_FIX.txt  # Streamlit Cloud Python 3.14 + TensorFlow checklist
+├── requirements.txt                # streamlit, numpy, h5py (works on Python 3.14)
+├── requirements-local.txt          # Adds tensorflow-cpu for local TF backend
+├── runtime.txt                     # Hint for some hosts
+├── STREAMLIT_CLOUD_PYTHON_FIX.txt  # Older TensorFlow-on-Cloud troubleshooting
 ├── codefile.ipynb                  # Data prep + model training + pickle export
-├── qoute_dataset.csv      # Quotes corpus (CSV)
-├── tokenizer.pkl          # Produced by notebook (required for app)
-├── max_len.pkl            # Produced by notebook (required for app)
-└── *.h5                   # Trained Keras LSTM (required for app)
+├── qoute_dataset.csv               # Quotes corpus (CSV)
+├── tokenizer.pkl                   # From notebook (local TF path); JSON mirrors vocabulary for cloud
+├── max_len.pkl                     # Produced by notebook (required for app)
+└── *.h5                            # Trained Keras LSTM (required for app)
 ```
 
 ---
@@ -294,6 +287,7 @@ next_word_prediction/
 - **Out-of-vocabulary (OOV)** words are dropped by the tokenizer at inference time; if nothing maps to an ID, the app cannot propose a next word.
 - Predictions reflect **quote-like** training data only; general prose or technical jargon may rank poorly.
 - Author labels are not used by the next-word model in the documented notebook path—only the quote column feeds the tokenizer.
+- **TensorFlow-free inference** reads weights from fixed HDF5 paths inside **`numpy_inference.py`**. If you retrain and Keras saves different layer/group names, update that loader or use the TensorFlow path locally.
 
 ---
 
