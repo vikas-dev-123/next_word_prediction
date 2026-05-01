@@ -224,19 +224,30 @@ Open **http://localhost:8501** in your browser.
 
 ## Deploying on Streamlit Community Cloud (`*.streamlit.app`)
 
-TensorFlow **does not support Python 3.14** yet (no compatible wheels). If logs show `Python 3.14.x` and dependency resolution fails for `tensorflow`, fix the **Python version on Streamlit’s side**, not only `requirements.txt`.
+### If logs say `Python 3.14.x` and TensorFlow / tensorflow-cpu fails to install
 
-### Required steps
+TensorFlow **does not ship wheels for Python 3.14**. Updating **`requirements.txt` alone will never fix that** while the host keeps Python 3.14.
 
-1. Open your app on Streamlit Community Cloud → **Manage app** (or **⋮** menu) → **Settings**.
-2. Under **Python version**, choose **3.11** or **3.12** (recommended: **3.11** for broad TensorFlow compatibility). **Do not use 3.14** for this project.
-3. **Save**, then **Reboot** the app (or delete the deployment and **deploy again** from GitHub if your platform requires that to apply the runtime).
+Per Streamlit’s docs, **Python version is chosen when you deploy**. On many accounts you **cannot switch Python on an existing app**—you must **delete** the deployment and **deploy again**.
 
-The file **`runtime.txt`** in this repo documents the intended runtime (`python-3.11`). Some hosts ignore it; **Community Cloud uses the version selected in the dashboard**, so that dashboard setting is what actually fixes the error.
+Do this:
+
+1. Go to [share.streamlit.io](https://share.streamlit.io) → open your workspace.
+2. **Delete** the broken app (remove deployment).
+3. **Deploy from GitHub again** (same repo, branch, entrypoint `app.py`).
+4. Before the final **Deploy**, open **Advanced settings**.
+5. Set **Python version** to **3.11** (recommended) or **3.12**. **Do not use 3.14** with TensorFlow today.
+6. Deploy, then wait for dependencies to install.
+
+A short checklist with the same steps lives in **`STREAMLIT_CLOUD_PYTHON_FIX.txt`** in the repo root so it’s easy to spot on GitHub.
+
+The **`runtime.txt`** file documents intent (`python-3.11`) for other hosts; **Streamlit Community Cloud does not use `runtime.txt` for Python**—the dashboard choice in step 5 is what matters.
 
 ### Dependencies on Cloud
 
-`requirements.txt` uses **`tensorflow-cpu`** (Linux-friendly, no GPU on Community Cloud) with versions that install on Python **3.11 / 3.12**. After changing Python and pushing this file, dependency install should succeed.
+`requirements.txt` uses **`tensorflow-cpu`** (appropriate for Linux CPU on Community Cloud), pinned to versions that install on **Python 3.11 / 3.12**. After you redeploy with one of those Python versions, installs should succeed.
+
+**Rebooting only** an app that was created with Python 3.14 **does not change** the interpreter; you still need **delete + redeploy** with Advanced settings if your app is stuck on 3.14.
 
 ---
 
@@ -246,7 +257,8 @@ The file **`runtime.txt`** in this repo documents the intended runtime (`python-
 next_word_prediction/
 ├── app.py                 # Streamlit inference UI
 ├── requirements.txt       # Runtime dependencies for the app
-├── runtime.txt            # Intended Python for hosts that honor it (pin Cloud via Settings)
+├── runtime.txt                       # Hint for some hosts (Cloud uses dashboard Python)
+├── STREAMLIT_CLOUD_PYTHON_FIX.txt   # Read this if Streamlit Cloud keeps failing TensorFlow install
 ├── codefile.ipynb         # Data prep + model training + pickle export
 ├── qoute_dataset.csv      # Quotes corpus (CSV)
 ├── tokenizer.pkl          # Produced by notebook (required for app)

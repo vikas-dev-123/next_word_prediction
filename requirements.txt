@@ -1,5 +1,8 @@
-# TensorFlow does not publish wheels for Python 3.14+. On Streamlit Community Cloud you MUST set
-# Python to 3.11 or 3.12 (Manage app → Settings → Python version), then redeploy.
+# ------------------------------------------------------------------------------
+# STREAMLIT CLOUD: build logs MUST show Python 3.11 or 3.12 — NOT 3.14.
+# TensorFlow has no wheels for 3.14. Fix: delete app -> redeploy -> Advanced
+# settings -> Python 3.11. See STREAMLIT_CLOUD_PYTHON_FIX.txt in this repo.
+# ------------------------------------------------------------------------------
 streamlit>=1.28.0
 tensorflow-cpu>=2.16.1,<2.18
 numpy>=1.26.0
